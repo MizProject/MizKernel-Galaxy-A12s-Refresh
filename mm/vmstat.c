@@ -1296,9 +1296,6 @@ const char * const vmstat_text[] = {
 	"sqzr_read",
 	"sqzr_write",
 #endif
-#ifdef CONFIG_SPECULATIVE_PAGE_FAULT
-	"speculative_pgfault"
-#endif
 #endif /* CONFIG_VM_EVENT_COUNTERS */
 };
 #endif /* CONFIG_PROC_FS || CONFIG_SYSFS || CONFIG_NUMA */
