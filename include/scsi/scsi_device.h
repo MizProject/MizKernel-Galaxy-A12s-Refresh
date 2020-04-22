@@ -8,6 +8,7 @@
 #include <linux/blkdev.h>
 #include <scsi/scsi.h>
 #include <linux/atomic.h>
+#include <linux/android_kabi.h>
 
 struct device;
 struct request_queue;
@@ -229,6 +230,11 @@ struct scsi_device {
 	struct task_struct	*quiesced_by;
 	unsigned long		sdev_data[0];
 	bool support_tw_lu;
+
+	ANDROID_KABI_RESERVE(1);
+	ANDROID_KABI_RESERVE(2);
+	ANDROID_KABI_RESERVE(3);
+	ANDROID_KABI_RESERVE(4);
 } __attribute__((aligned(sizeof(unsigned long))));
 
 #define	to_scsi_device(d)	\
