@@ -333,6 +333,10 @@ static int ehci_platform_resume(struct device *dev)
 	}
 
 	ehci_resume(hcd, priv->reset_on_resume);
+
+	if (priv->quirk_poll)
+		quirk_poll_init(priv);
+
 	return 0;
 }
 #endif /* CONFIG_PM_SLEEP */
