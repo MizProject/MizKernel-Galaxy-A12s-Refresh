@@ -60,10 +60,9 @@ static const char * const power_supply_charge_type_text[] = {
 };
 
 static const char * const power_supply_health_text[] = {
-	"Unknown", "Good", "Overheat", "Warm", "Dead", "Over voltage",
-	"Unspecified failure", "Cold", "Cool",
-	"Watchdog timer expire", "Safety timer expire",
-	"Under voltage", "OverheatLimit"
+	"Unknown", "Good", "Overheat", "Dead", "Over voltage",
+	"Unspecified failure", "Cold", "Watchdog timer expire",
+	"Safety timer expire", "Over current", "Warm", "Cool", "Hot"
 };
 
 static const char * const power_supply_technology_text[] = {
@@ -77,6 +76,29 @@ static const char * const power_supply_capacity_level_text[] = {
 
 static const char * const power_supply_scope_text[] = {
 	"Unknown", "System", "Device"
+};
+
+static const char * const power_supply_usbc_text[] = {
+	"Nothing attached", "Sink attached", "Powered cable w/ sink",
+	"Debug Accessory", "Audio Adapter", "Powered cable w/o sink",
+	"Source attached (default current)",
+	"Source attached (medium current)",
+	"Source attached (high current)",
+	"Debug Accessory Mode (default current)",
+	"Debug Accessory Mode (medium current)",
+	"Debug Accessory Mode (high current)",
+	"Non compliant",
+	"Non compliant (Rp-Default/Rp-Default)",
+	"Non compliant (Rp-1.5A/Rp-1.5A)",
+	"Non compliant (Rp-3A/Rp-3A)"
+};
+
+static const char * const power_supply_usbc_pr_text[] = {
+	"none", "dual power role", "sink", "source"
+};
+
+static const char * const power_supply_typec_src_rp_text[] = {
+	"Rp-Default", "Rp-1.5A", "Rp-3A"
 };
 
 static ssize_t power_supply_show_property(struct device *dev,
@@ -258,6 +280,7 @@ static struct device_attribute power_supply_attrs[] = {
 	POWER_SUPPLY_ATTR(time_to_full_now),
 	POWER_SUPPLY_ATTR(time_to_full_avg),
 	POWER_SUPPLY_ATTR(type),
+    POWER_SUPPLY_ATTR(usb_type),
 	POWER_SUPPLY_ATTR(scope),
 	POWER_SUPPLY_ATTR(precharge_current),
 	POWER_SUPPLY_ATTR(charge_term_current),
