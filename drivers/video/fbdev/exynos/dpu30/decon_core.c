@@ -3255,35 +3255,25 @@ static int decon_ioctl(struct fb_info *info, unsigned int cmd,
 
 	case S3CFB_WIN_CONFIG_OLD:
 	case S3CFB_WIN_CONFIG:
-		argp = (struct decon_win_config_data __user *)arg;
-		DPU_EVENT_LOG(DPU_EVT_WIN_CONFIG, &decon->sd, ktime_set(0, 0));
-		decon_systrace(decon, 'C', "decon_win_config", 1);
-		if (copy_from_user(&win_data, (void __user *)arg, _IOC_SIZE(cmd))){
-			ret = -EFAULT;
-			break;
-		}
+        argp = (struct decon_win_config_data __user *)arg;
+        DPU_EVENT_LOG(DPU_EVT_WIN_CONFIG, &decon->sd, ktime_set(0, 0));
+        decon_systrace(decon, 'C', "decon_win_config", 1);
+        if (copy_from_user(&win_data,
+                   (struct decon_win_config_data __user *)arg,
+                   sizeof(struct decon_win_config_data))) {
+            ret = -EFAULT;
+            break;
+        }
 
-/* Android O version does not support non translation */
-#if 0
-//#if !defined(CONFIG_ANDROID_SYSTEM_AS_ROOT)
-		/*
-		 * channel is translated to DPP channel number temporarily.
-		 * In the future, user side will use DPP channel number instead
-		 * of channel.
-		 * If use side uses DPP channel number for S3CFB_WIN_CONFIG parameter,
-		 * this function will be removed.
-		 */
-		decon_translate_idma2ch(decon, &win_data);
-#endif
-		ret = decon_set_win_config(decon, &win_data);
-		if (ret)
-			break;
+        ret = decon_set_win_config(decon, &win_data);
+        if (ret)
+            break;
 
-		if (copy_to_user((void __user *)arg, &win_data, _IOC_SIZE(cmd))) {
-			ret = -EFAULT;
-			break;
-		}
-		break;
+        if (copy_to_user((void __user *)arg, &win_data, _IOC_SIZE(cmd))) {
+            ret = -EFAULT;
+            break;
+        }
+        break;
 
 	case S3CFB_GET_HDR_CAPABILITIES:
 		ret = decon_get_hdr_capa(decon, &hdr_capa);
