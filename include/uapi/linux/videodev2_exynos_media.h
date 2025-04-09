@@ -80,7 +80,9 @@
 
 /* 12 Y/CbCr 4:2:0 SBWC Lossy single */
 #define V4L2_PIX_FMT_NV12N_SBWCL_8B	v4l2_fourcc('N', '1', 'L', '8')
+#ifdef __KERNEL__
 #define V4L2_PIX_FMT_NV12N_SBWCL_10B	v4l2_fourcc('N', '1', 'L', '1')
+#endif /* __KERNEL__ */
 
 /* helper macros */
 #ifndef __ALIGN_UP
@@ -116,6 +118,7 @@
 #define S10B_2B_STRIDE(w)		(__ALIGN_UP(((w + 3)/ 4), 16))
 
 /* SBWC */
+#ifdef __KERNEL__
 #define SBWC_8B_STRIDE(w)		(128 * (((w) + 31) / 32))
 #define SBWC_10B_STRIDE(w)		(160 * (((w) + 31) / 32))
 #define SBWC_HEADER_STRIDE(w)		((((((w) + 63) / 64) + 15) / 16) * 16)
@@ -146,4 +149,5 @@
 
 #define SBWCL_8B_CBCR_BASE(base, w, h, r)	((base) + SBWCL_8B_Y_SIZE(w, h, r))
 #define SBWCL_10B_CBCR_BASE(base, w, h, r)	((base) + SBWCL_10B_Y_SIZE(w, h, r))
+#endif /* __KERNEL__ */
 #endif /* __LINUX_VIDEODEV2_EXYNOS_MEDIA_H */
