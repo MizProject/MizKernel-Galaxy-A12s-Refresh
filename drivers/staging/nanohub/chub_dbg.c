@@ -545,7 +545,7 @@ static struct device_attribute attributes[] = {
 	__ATTR(utc, 0664, chub_utc_show, chub_utc_store),
 	__ATTR(ipc_test, 0220, NULL, chub_ipc_store),
 	__ATTR(alive, 0440, chub_alive_show, NULL),
-	__ATTR(wakeup, 0220, NULL, chub_wakeup_store),
+	__ATTR(wakeup_debug, 0220, NULL, chub_wakeup_store),
 	__ATTR(loglevel, 0664, chub_loglevel_show, chub_loglevel_store),
 };
 
