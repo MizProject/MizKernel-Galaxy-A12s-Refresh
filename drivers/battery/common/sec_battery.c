@@ -315,13 +315,12 @@ __setup("f_mode=", read_f_mode);
 inline void battery_wakeup_source_init(struct device *dev, struct wakeup_source **ws, const char *name)
 {
 #if !defined(CONFIG_SUPPORT_WAKEUP_REGISTER) && LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0)
-	// 4.19 R
-	wakeup_source_init(*ws, name);
-	// 4.19 Q
 	if (!(*ws)) {
 		*ws = wakeup_source_create(name);
 		if (*ws)
 			wakeup_source_add(*ws);
+	} else {
+		wakeup_source_init(*ws, name);
 	}
 #else
 	*ws = wakeup_source_register(NULL, name);
