@@ -28,9 +28,6 @@
 #include "../is-device-ischain.h"
 #include "is-vender.h"
 #include "votf/camerapp-votf.h"
-#ifdef CONFIG_RKP
-#include <linux/rkp.h>
-#endif
 
 int debug_ddk;
 module_param(debug_ddk, int, 0644);

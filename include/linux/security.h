@@ -54,11 +54,7 @@ struct xattr;
 struct xfrm_sec_ctx;
 struct mm_struct;
 
-#ifdef CONFIG_KDP_CRED
-#include <linux/kdp.h>
-#else
 #define security_integrity_current()  0
-#endif
 
 /* Default (no) options for the capable function */
 #define CAP_OPT_NONE 0x0
