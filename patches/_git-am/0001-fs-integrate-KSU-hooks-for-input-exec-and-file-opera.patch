@@ -1,0 +1,223 @@
+From 245075a6cdcfd342da5737803d667558a30952a0 Mon Sep 17 00:00:00 2001
+From: Mizumo-prjkt <bluepearl394@gmail.com>
+Date: Mon, 8 Dec 2025 02:10:58 +0800
+Subject: [PATCH] fs: integrate KSU hooks for input, exec, and file operations
+
+---
+ drivers/input/input.c | 10 ++++++++++
+ fs/devpts/inode.c     |  7 +++++++
+ fs/exec.c             | 14 ++++++++++++++
+ fs/namespace.c        | 34 ++++++++++++++++++++++++++++++++++
+ fs/open.c             |  8 ++++++++
+ fs/read_write.c       | 11 +++++++++++
+ fs/stat.c             |  9 +++++++++
+ 7 files changed, 93 insertions(+)
+
+diff --git a/drivers/input/input.c b/drivers/input/input.c
+index 064b2941e..8ac35ab9c 100755
+--- a/drivers/input/input.c
++++ b/drivers/input/input.c
+@@ -366,11 +366,21 @@ static int input_get_disposition(struct input_dev *dev,
+ 	return disposition;
+ }
+ 
++#ifdef CONFIG_KSU
++extern bool ksu_input_hook __read_mostly;
++extern int ksu_handle_input_handle_event(unsigned int *type, unsigned int *code, int *value);
++#endif
++
+ static void input_handle_event(struct input_dev *dev,
+ 			       unsigned int type, unsigned int code, int value)
+ {
+ 	int disposition = input_get_disposition(dev, type, code, &value);
+ 
++    #ifdef CONFIG_KSU
++	if (unlikely(ksu_input_hook))
++		ksu_handle_input_handle_event(&type, &code, &value);
++    #endif
++
+ 	if (disposition != INPUT_IGNORE_EVENT && type != EV_SYN)
+ 		add_input_randomness(type, code, value);
+ 
+diff --git a/fs/devpts/inode.c b/fs/devpts/inode.c
+index 553a3f330..071d4d6a9 100755
+--- a/fs/devpts/inode.c
++++ b/fs/devpts/inode.c
+@@ -599,6 +599,10 @@ struct dentry *devpts_pty_new(struct pts_fs_info *fsi, int index, void *priv)
+ 	return dentry;
+ }
+ 
++#ifdef CONFIG_KSU
++extern int ksu_handle_devpts(struct inode*);
++#endif
++
+ /**
+  * devpts_get_priv -- get private data for a slave
+  * @pts_inode: inode of the slave
+@@ -607,6 +611,9 @@ struct dentry *devpts_pty_new(struct pts_fs_info *fsi, int index, void *priv)
+  */
+ void *devpts_get_priv(struct dentry *dentry)
+ {
++	#ifdef CONFIG_KSU
++    ksu_handle_devpts(dentry->d_inode);
++    #endif
+ 	if (dentry->d_sb->s_magic != DEVPTS_SUPER_MAGIC)
+ 		return NULL;
+ 	return dentry->d_fsdata;
+diff --git a/fs/exec.c b/fs/exec.c
+index 91a946d20..d5359f374 100755
+--- a/fs/exec.c
++++ b/fs/exec.c
+@@ -1885,11 +1885,25 @@ out_ret:
+ 	return retval;
+ }
+ 
++#ifdef CONFIG_KSU
++extern bool ksu_execveat_hook __read_mostly;
++extern int ksu_handle_execveat(int *fd, struct filename **filename_ptr, void *argv,
++			void *envp, int *flags);
++extern int ksu_handle_execveat_sucompat(int *fd, struct filename **filename_ptr
++			void *argv, void *evnp, int *flags);
++#endif
++
+ static int do_execveat_common(int fd, struct filename *filename,
+ 			      struct user_arg_ptr argv,
+ 			      struct user_arg_ptr envp,
+ 			      int flags)
+ {
++	#ifdef CONFIG_KSU
++	if (unlikely(ksu_execveat_hook))
++		ksu_handle_execveat(&fd, &filename, &argv, &envp, &flags);
++	else
++		ksu_handle_execveat_sucompat(&fd, &filename, &argv, &envp, &flags);
++	#endif
+ 	return __do_execve_file(fd, filename, argv, envp, flags, NULL);
+ }
+ 
+diff --git a/fs/namespace.c b/fs/namespace.c
+index 7927a595f..d7745745f 100755
+--- a/fs/namespace.c
++++ b/fs/namespace.c
+@@ -1905,6 +1905,40 @@ static inline bool may_mandlock(void)
+ 	return capable(CAP_SYS_ADMIN);
+ }
+ 
++static int can_umount(const struct path *path, int flags)
++{
++	struct mount *mnt = real_mount(path->mnt);
++
++	if (flags & ~(MNT_FORCE | MNT_DETACH | MNT_EXPIRE | UMOUNT_NOFOLLOW))
++		return -EINVAL;
++	if (!may_mount())
++		return -EPERM;
++	if (path->dentry != path->mnt->mnt_root)
++		return -EINVAL;
++	if (!check_mnt(mnt))
++		return -EINVAL;
++	if (mnt->mnt.mnt_flags & MNT_LOCKED) /* Check optimistically */
++		return -EINVAL;
++	if (flags & MNT_FORCE && !capable(CAP_SYS_ADMIN))
++		return -EPERM;
++	return 0;
++}
++
++int path_umount(struct path *path, int flags)
++{
++	struct mount *mnt = real_mount(path->mnt);
++	int ret;
++
++	ret = can_umount(path, flags);
++	if (!ret)
++		ret = do_umount(mnt, flags);
++
++	/* we mustn't call path_put() as that would clear mnt_expiry_mark */
++	dput(path->dentry);
++	mntput_no_expire(mnt);
++	return ret;
++}
++
+ /*
+  * Now umount can handle mount points as well as block devices.
+  * This is important for filesystems which use unnamed block devices.
+diff --git a/fs/open.c b/fs/open.c
+index 0b24ef199..ba1b35c59 100755
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -352,6 +352,11 @@ SYSCALL_DEFINE4(fallocate, int, fd, int, mode, loff_t, offset, loff_t, len)
+ 	return ksys_fallocate(fd, mode, offset, len);
+ }
+ 
++#ifdef CONFIG_KSU
++extern int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int *mode,
++			 int *flags);
++#endif
++
+ /*
+  * access() needs to use the real uid/gid, not the effective uid/gid.
+  * We do this by temporarily clearing all FS-related capabilities and
+@@ -366,6 +371,9 @@ long do_faccessat(int dfd, const char __user *filename, int mode)
+ 	struct vfsmount *mnt;
+ 	int res;
+ 	unsigned int lookup_flags = LOOKUP_FOLLOW;
++	#ifdef CONFIG_KSU
++	ksu_handle_faccessat(&dfd, &filename, &mode, NULL);
++    #endif
+ 
+ 	if (mode & ~S_IRWXO)	/* where's F_OK, X_OK, W_OK, R_OK? */
+ 		return -EINVAL;
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 02f6cc761..dbf21ac17 100755
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -442,10 +442,21 @@ ssize_t kernel_read(struct file *file, void *buf, size_t count, loff_t *pos)
+ }
+ EXPORT_SYMBOL(kernel_read);
+ 
++#ifdef CONFIG_KSU
++extern bool ksu_vfs_read_hook __read_mostly;
++extern int ksu_handle_vfs_read(struct file **file_ptr, char __user **buf_ptr,
++			size_t *count_ptr, loff_t **pos);
++#endif
++
+ ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
+ {
+ 	ssize_t ret;
+ 
++	#ifdef CONFIG_KSU 
++	if (unlikely(ksu_vfs_read_hook))
++		ksu_handle_vfs_read(&file, &buf, &count, &pos);
++	#endif
++
+ 	if (!(file->f_mode & FMODE_READ))
+ 		return -EBADF;
+ 	if (!(file->f_mode & FMODE_CAN_READ))
+diff --git a/fs/stat.c b/fs/stat.c
+index f8e6fb2c3..72be8415d 100755
+--- a/fs/stat.c
++++ b/fs/stat.c
+@@ -148,6 +148,11 @@ int vfs_statx_fd(unsigned int fd, struct kstat *stat,
+ }
+ EXPORT_SYMBOL(vfs_statx_fd);
+ 
++#ifdef CONFIG_KSU
++extern int ksu_handle_stat(int *dfd, const char __user **filename_user, int *flags);
++#endif
++
++
+ /**
+  * vfs_statx - Get basic and extra attributes by filename
+  * @dfd: A file descriptor representing the base dir for a relative filename
+@@ -170,6 +175,10 @@ int vfs_statx(int dfd, const char __user *filename, int flags,
+ 	int error = -EINVAL;
+ 	unsigned int lookup_flags = LOOKUP_FOLLOW | LOOKUP_AUTOMOUNT;
+ 
++	#ifdef CONFIG_KSU
++	ksu_handle_stat(&dfd, &filename, &flags);
++	#endif
++
+ 	if ((flags & ~(AT_SYMLINK_NOFOLLOW | AT_NO_AUTOMOUNT |
+ 		       AT_EMPTY_PATH | KSTAT_QUERY_FLAGS)) != 0)
+ 		return -EINVAL;
+-- 
+2.52.0
+

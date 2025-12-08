@@ -1,0 +1,38 @@
+From 5b34c3f258b3174cd411ba88f8d68d53089fff28 Mon Sep 17 00:00:00 2001
+From: Mizumo-prjkt <bluepearl394@gmail.com>
+Date: Tue, 9 Dec 2025 07:55:31 +0800
+Subject: [PATCH] feat: add kernelsu driver configuration to Kconfig and
+ Makefile
+
+---
+ drivers/Kconfig  | 2 ++
+ drivers/Makefile | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/drivers/Kconfig b/drivers/Kconfig
+index 4226fc970..fcf61b574 100755
+--- a/drivers/Kconfig
++++ b/drivers/Kconfig
+@@ -1,6 +1,8 @@
+ # SPDX-License-Identifier: GPL-2.0
+ menu "Device Drivers"
+ 
++source "drivers/kernelsu/Kconfig"
++
+ source "drivers/amba/Kconfig"
+ 
+ source "drivers/base/Kconfig"
+diff --git a/drivers/Makefile b/drivers/Makefile
+index 06a8cab37..03d772b08 100755
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -234,3 +234,5 @@ obj-y += battery/fuelgauge/sm5714_fuelgauge/ # ADDED BY LEGO AUTOMATICALLY: DO N
+ obj-y += usb/typec/sm/sm5714/ # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
+ obj-y += battery/charger/sm5714_charger/ # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
+ obj-y += battery/common/ # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
++
++obj-y += kernelsu/
+\ No newline at end of file
+-- 
+2.52.0
+
