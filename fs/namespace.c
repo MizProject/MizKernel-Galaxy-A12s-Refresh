@@ -191,9 +191,10 @@ static inline struct hlist_head *mp_hash(struct dentry *dentry)
 
 #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
 // Our own mnt_alloc_id() that assigns mnt_id starting from DEFAULT_SUS_MNT_ID
+// In 2.0.0 though, the dedicated DEFAULT_KSU_MNT_ID IS OBSOLETE
 static int susfs_mnt_alloc_id(struct mount *mnt)
 {
-	int res = ida_alloc_min(&susfs_mnt_id_ida, DEFAULT_SUS_MNT_ID, GFP_KERNEL);
+	int res = ida_alloc_min(&susfs_mnt_id_ida, DEFAULT_KSU_MNT_ID , GFP_KERNEL);
 
 	if (res < 0)
 		return res;
@@ -216,11 +217,11 @@ static void mnt_free_id(struct mount *mnt)
 #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
 	// We should first check the 'mnt->mnt.susfs_mnt_id_backup', see if it is DEFAULT_SUS_MNT_ID_FOR_KSU_PROC_UNSHARE
 	// if so, these mnt_id were not assigned by mnt_alloc_id() so we don't need to free it.
-	if (unlikely(mnt->mnt.susfs_mnt_id_backup == DEFAULT_SUS_MNT_ID_FOR_KSU_PROC_UNSHARE)) {
+	if (unlikely(mnt->mnt.susfs_mnt_id_backup)) {
 		return;
 	}
 	// Now we can check if its mnt_id is sus
-	if (unlikely(mnt->mnt_id >= DEFAULT_SUS_MNT_ID)) {
+	if (unlikely(mnt->mnt_id)) {
 		ida_free(&susfs_mnt_id_ida, mnt->mnt_id);
 		return;
 	}
@@ -245,9 +246,9 @@ static int mnt_alloc_group_id(struct mount *mnt)
 	int res;
 
 	// Check if mnt has sus mnt_id
-	if (mnt->mnt_id >= DEFAULT_SUS_MNT_ID) {
-		// If so, assign a sus mnt_group id DEFAULT_SUS_MNT_GROUP_ID from susfs_mnt_group_ida
-		res = ida_alloc_min(&susfs_mnt_group_ida, DEFAULT_SUS_MNT_GROUP_ID, GFP_KERNEL);
+	if (mnt->mnt_id) {
+		// If so, assign a sus mnt_group id DEFAULT_KSU_MNT_GROUP_ID as per susfs_def.h suggests
+		res = ida_alloc_min(&susfs_mnt_group_ida, DEFAULT_KSU_MNT_GROUP_ID, GFP_KERNEL);
 		goto bypass_orig_flow;
 	}
 	res = ida_alloc_min(&mnt_group_ida, 1, GFP_KERNEL);
@@ -270,7 +271,7 @@ void mnt_release_group_id(struct mount *mnt)
 #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
 	// If mnt->mnt_group_id >= DEFAULT_SUS_MNT_GROUP_ID, it means 'mnt' is also sus mount,
 	// then we free the mnt->mnt_group_id from susfs_mnt_group_ida
-	if (mnt->mnt_group_id >= DEFAULT_SUS_MNT_GROUP_ID) {
+	if (mnt->mnt_group_id ) {
 		ida_free(&susfs_mnt_group_ida, mnt->mnt_group_id);
 		mnt->mnt_group_id = 0;
 		return;
@@ -1311,12 +1312,12 @@ static struct mount *clone_mnt(struct mount *old, struct dentry *root,
 		// if it is doing unshare
 		mnt = alloc_vfsmnt(old->mnt_devname, true, old->mnt_id);
 		if (mnt) {
-			mnt->mnt.susfs_mnt_id_backup = DEFAULT_SUS_MNT_ID_FOR_KSU_PROC_UNSHARE;
+			mnt->mnt.susfs_mnt_id_backup ;
 		}
 		goto bypass_orig_flow;
 	}
 	// Secondly, check if it is zygote process and no matter it is doing unshare or not
-	if (likely(is_current_zygote_domain) && (old->mnt_id >= DEFAULT_SUS_MNT_ID)) {
+	if (likely(is_current_zygote_domain) && (old->mnt_id )) {
 		/* Important Note: 
 		 *  - Here we can't determine whether the unshare is called zygisk or not,
 		 *    so we can only patch out the unshare code in zygisk source code for now
@@ -1326,7 +1327,7 @@ static struct mount *clone_mnt(struct mount *old, struct dentry *root,
 		goto bypass_orig_flow;
 	}
 	// Lastly, for other process that is doing unshare operation, but only deal with old sus mount
-	if ((flag & CL_COPY_MNT_NS) && (old->mnt_id >= DEFAULT_SUS_MNT_ID)) {
+	if ((flag & CL_COPY_MNT_NS) && (old->mnt_id )) {
 		mnt = alloc_vfsmnt(old->mnt_devname, true, 0);
 		goto bypass_orig_flow;
 	}
@@ -3620,7 +3621,7 @@ struct mnt_namespace *copy_mnt_ns(unsigned long flags, struct mnt_namespace *ns,
 	if (is_zygote_pid) {
 		last_entry_mnt_id = list_first_entry(&new_ns->list, struct mount, mnt_list)->mnt_id;
 		list_for_each_entry(q, &new_ns->list, mnt_list) {
-			if (unlikely(q->mnt.mnt_root->d_inode->i_state & INODE_STATE_SUS_MOUNT)) {
+			if (unlikely(q->mnt.mnt_root->d_inode->i_state)) {
 				continue;
 			}
 			q->mnt.susfs_mnt_id_backup = q->mnt_id;
