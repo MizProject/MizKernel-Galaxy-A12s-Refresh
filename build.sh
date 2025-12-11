@@ -117,8 +117,8 @@ build() {
 
     
     make clean && make mrproper
-    make -j64 -C $(pwd) O=$(pwd)/out  KCFLAGS=-w CONFIG_SECTION_MISMATCH_WARN_ONLY=y ARCH=arm64 mizproject/mizkernel-a12snsxx_defconfig $LTOARG $LDARG
-    make -j64 -C $(pwd) O=$(pwd)/out  KCFLAGS=-w CONFIG_SECTION_MISMATCH_WARN_ONLY=y ARCH=arm64 
+    make -j64 KCFLAGS=-w CONFIG_SECTION_MISMATCH_WARN_ONLY=y ARCH=arm64 mizproject/mizkernel-a12snsxx_defconfig $LTOARG $LDARG
+    make -j64 KCFLAGS=-w CONFIG_SECTION_MISMATCH_WARN_ONLY=y ARCH=arm64 
     cp out/arch/arm64/boot/Image $(pwd)/arch/arm64/boot/Image
 }
 
