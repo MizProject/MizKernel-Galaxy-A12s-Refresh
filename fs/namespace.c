@@ -190,9 +190,10 @@ static inline struct hlist_head *mp_hash(struct dentry *dentry)
 }
 
 #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
+// Our own mnt_alloc_id() that assigns mnt_id starting from DEFAULT_SUS_MNT_ID
 static int susfs_mnt_alloc_id(struct mount *mnt)
 {
-	int res = ida_alloc_min(&susfs_mnt_id_ida, GFP_KERNEL);
+	int res = ida_alloc_min(&susfs_mnt_id_ida, DEFAULT_SUS_MNT_ID, GFP_KERNEL);
 
 	if (res < 0)
 		return res;
@@ -213,18 +214,16 @@ static int mnt_alloc_id(struct mount *mnt)
 static void mnt_free_id(struct mount *mnt)
 {
 #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
-	// Since the deprecation on sus_su.h, some functions are breaking down
-	// This if statement for example, has been disabled since 2.0.0, a lot has changed
-	// // We should first check the 'mnt->mnt.susfs_mnt_id_backup', see if it is DEFAULT_SUS_MNT_ID_FOR_KSU_PROC_UNSHARE
-	// // if so, these mnt_id were not assigned by mnt_alloc_id() so we don't need to free it.
-	// if (unlikely(mnt->mnt.susfs_mnt_id_backup == DEFAULT_SUS_MNT_ID_FOR_KSU_PROC_UNSHARE)) {
-	// 	return;
-	// }
+	// We should first check the 'mnt->mnt.susfs_mnt_id_backup', see if it is DEFAULT_SUS_MNT_ID_FOR_KSU_PROC_UNSHARE
+	// if so, these mnt_id were not assigned by mnt_alloc_id() so we don't need to free it.
+	if (unlikely(mnt->mnt.susfs_mnt_id_backup == DEFAULT_SUS_MNT_ID_FOR_KSU_PROC_UNSHARE)) {
+		return;
+	}
 	// Now we can check if its mnt_id is sus
-	// if (unlikely(mnt->mnt_id >= DEFAULT_SUS_MNT_ID)) {
-	// 	ida_free(&susfs_mnt_id_ida, mnt->mnt_id);
-	// 	return;
-	// }
+	if (unlikely(mnt->mnt_id >= DEFAULT_SUS_MNT_ID)) {
+		ida_free(&susfs_mnt_id_ida, mnt->mnt_id);
+		return;
+	}
 	// Lastly if 'mnt->mnt.susfs_mnt_id_backup' is not 0, then it contains a backup origin mnt_id
 	// so we free it in the original way
 	if (likely(mnt->mnt.susfs_mnt_id_backup)) {
@@ -246,11 +245,11 @@ static int mnt_alloc_group_id(struct mount *mnt)
 	int res;
 
 	// Check if mnt has sus mnt_id
-	// if (mnt->mnt_id >= DEFAULT_SUS_MNT_ID) {
-	// 	// If so, assign a sus mnt_group id DEFAULT_SUS_MNT_GROUP_ID from susfs_mnt_group_ida
+	if (mnt->mnt_id >= DEFAULT_SUS_MNT_ID) {
+		// If so, assign a sus mnt_group id DEFAULT_SUS_MNT_GROUP_ID from susfs_mnt_group_ida
 		res = ida_alloc_min(&susfs_mnt_group_ida, DEFAULT_SUS_MNT_GROUP_ID, GFP_KERNEL);
 		goto bypass_orig_flow;
-	// }
+	}
 	res = ida_alloc_min(&mnt_group_ida, 1, GFP_KERNEL);
 bypass_orig_flow:
 #else
