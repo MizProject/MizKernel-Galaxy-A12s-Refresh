@@ -190,7 +190,7 @@ static inline struct hlist_head *mp_hash(struct dentry *dentry)
 }
 
 #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
-// Our own mnt_alloc_id() that assigns mnt_id starting from DEFAULT_SUS_MNT_ID
+// Our own mnt_alloc_id() that assigns mnt_id starting from DEFAULT_KSU_MNT_ID
 // In 2.0.0 though, the dedicated DEFAULT_KSU_MNT_ID IS OBSOLETE
 static int susfs_mnt_alloc_id(struct mount *mnt)
 {
@@ -215,7 +215,7 @@ static int mnt_alloc_id(struct mount *mnt)
 static void mnt_free_id(struct mount *mnt)
 {
 #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
-	// We should first check the 'mnt->mnt.susfs_mnt_id_backup', see if it is DEFAULT_SUS_MNT_ID_FOR_KSU_PROC_UNSHARE
+	// We should first check the 'mnt->mnt.susfs_mnt_id_backup', see if it is DEFAULT_KSU_MNT_ID_FOR_KSU_PROC_UNSHARE
 	// if so, these mnt_id were not assigned by mnt_alloc_id() so we don't need to free it.
 	if (unlikely(mnt->mnt.susfs_mnt_id_backup)) {
 		return;
