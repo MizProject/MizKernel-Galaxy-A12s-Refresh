@@ -134,7 +134,7 @@ out_seq_printf:
 #endif
 		seq_printf(m, "inotify wd:%x ino:%lx sdev:%x mask:%x ignored_mask:%x ",
 					inode_mark->wd, inode->i_ino, inode->i_sb->s_dev,
-					mask, mark->ignored_mask);
+					mark, mark->ignored_mask);
 	}
 }
 
