@@ -4257,7 +4257,7 @@ void susfs_run_try_umount_for_current_mnt_ns(void) {
 	namespace_lock();
 	list_for_each_entry(mnt, &mnt_ns->list, mnt_list) {
 		// Change the sus mount to be private
-		if (mnt->mnt.mnt_root->d_inode->i_state & INODE_STATE_SUS_MOUNT) {
+		if (mnt->mnt.mnt_root->d_inode->i_state & BIT_SUS_MOUNT) {
 			change_mnt_propagation(mnt, MS_PRIVATE);
 		}
 	}
