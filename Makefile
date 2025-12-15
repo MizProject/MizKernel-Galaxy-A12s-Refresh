@@ -325,6 +325,8 @@ ARCH		?=arm64
 CROSS_COMPILE   ?= $(srctree)/toolchain/proton-clang/bin
 CROSS_COMPILE_ANDROID_PROTON	?=	$(CROSS_COMPILE)/aarch64-linux-gnu-
 
+LLVM_LINK_PROTON	?=	$(srctree)/toolchain/proton-clang/bin
+
 # Architecture as present in compile.h
 UTS_MACHINE 	:= $(ARCH)
 SRCARCH 	:= $(ARCH)
@@ -383,11 +385,16 @@ LD		= $(CROSS_COMPILE_ANDROID_PROTON)ld
 CC      = $(srctree)/toolchain/proton-clang/bin/clang
 # 
 CPP		= $(CC) -E
-AR		= $(CROSS_COMPILE_ANDROID_PROTON)ar
-NM		= $(CROSS_COMPILE_ANDROID_PROTON)nm
-STRIP		= $(CROSS_COMPILE_ANDROID_PROTON)strip
-OBJCOPY		= $(CROSS_COMPILE_ANDROID_PROTON)objcopy
-OBJDUMP		= $(CROSS_COMPILE_ANDROID_PROTON)objdump
+# AR		= $(CROSS_COMPILE_ANDROID_PROTON)ar
+# NM		= $(CROSS_COMPILE_ANDROID_PROTON)nm
+# STRIP		= $(CROSS_COMPILE_ANDROID_PROTON)strip
+# OBJCOPY		= $(CROSS_COMPILE_ANDROID_PROTON)objcopy
+# OBJDUMP		= $(CROSS_COMPILE_ANDROID_PROTON)objdump
+AR	=	$(LLVM_LINK_PROTON)/llvm-ar
+NM	=	$(LLVM_LINK_PROTON)/llvm-nm
+STRIP	=	$(LLVM_LINK_PROTON)/llvm-strip
+OBJCOPY	=	$(LLVM_LINK_PROTON)/llvm-objcopy
+OBJDUMP	=	$(LLVM_LINK_PROTON)/llvm-objdump
 LEX		= flex
 YACC		= bison
 AWK		= awk
