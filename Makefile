@@ -322,7 +322,8 @@ include scripts/subarch.include
 ARCH		?=arm64
 # Disown/Don't utilize standard 4.9
 # CROSS_COMPILE   ?= $(srctree)/toolchain/CC-4.9/bin/aarch64-linux-android-
-CROSS_COMPILE   ?= $(srctree)/toolchain/proton-clang/bin/aarch64-linux-gnu-
+CROSS_COMPILE   ?= $(srctree)/toolchain/proton-clang/bin
+CROSS_COMPILE_ANDROID_PROTON	?=	$(CROSS_COMPILE)/aarch64-linux-gnu-
 
 # Architecture as present in compile.h
 UTS_MACHINE 	:= $(ARCH)
@@ -371,8 +372,10 @@ KBUILD_HOSTLDFLAGS  := $(HOST_LFS_LDFLAGS) $(HOSTLDFLAGS)
 KBUILD_HOSTLDLIBS   := $(HOST_LFS_LIBS) $(HOSTLDLIBS)
 
 # Make variables (CC, etc...)
-AS		= $(CROSS_COMPILE)as
-LD		= $(CROSS_COMPILE)ld
+# AS & AD Calls are deprecated as its broken for some reason
+
+AS		= $(CROSS_COMPILE_ANDROID_PROTON)as
+LD		= $(CROSS_COMPILE_ANDROID_PROTON)ld
 # This is the default CC, but i should probably implement a flag later
 # on to accomodate both clangs (r38 and r41)
 # CC      = $(srctree)/toolchain/clang-r383902/bin/clang
@@ -380,11 +383,11 @@ LD		= $(CROSS_COMPILE)ld
 CC      = $(srctree)/toolchain/proton-clang/bin/clang
 # 
 CPP		= $(CC) -E
-AR		= $(CROSS_COMPILE)ar
-NM		= $(CROSS_COMPILE)nm
-STRIP		= $(CROSS_COMPILE)strip
-OBJCOPY		= $(CROSS_COMPILE)objcopy
-OBJDUMP		= $(CROSS_COMPILE)objdump
+AR		= $(CROSS_COMPILE_ANDROID_PROTON)ar
+NM		= $(CROSS_COMPILE_ANDROID_PROTON)nm
+STRIP		= $(CROSS_COMPILE_ANDROID_PROTON)strip
+OBJCOPY		= $(CROSS_COMPILE_ANDROID_PROTON)objcopy
+OBJDUMP		= $(CROSS_COMPILE_ANDROID_PROTON)objdump
 LEX		= flex
 YACC		= bison
 AWK		= awk
@@ -398,7 +401,7 @@ PYTHON3		= python3
 CHECK		= sparse
 
 ifeq ($(CONFIG_EXYNOS_FMP_FIPS),)
-READELF        = $(CROSS_COMPILE)readelf
+READELF        = $(CROSS_COMPILE_ANDROID_PROTON)readelf
 export READELF
 endif
 
@@ -447,7 +450,7 @@ KBUILD_LDFLAGS :=
 GCC_PLUGINS_CFLAGS :=
 CLANG_FLAGS :=
 
-export ARCH SRCARCH CONFIG_SHELL HOSTCC KBUILD_HOSTCFLAGS CROSS_COMPILE AS LD CC
+export ARCH SRCARCH CONFIG_SHELL HOSTCC KBUILD_HOSTCFLAGS CROSS_COMPILE CROSS_COMPILE_ANDROID_PROTON AS LD CC
 export CPP AR NM STRIP OBJCOPY OBJDUMP KBUILD_HOSTLDFLAGS KBUILD_HOSTLDLIBS
 export MAKE LEX YACC AWK GENKSYMS INSTALLKERNEL PERL PYTHON PYTHON2 PYTHON3 UTS_MACHINE
 export HOSTCXX KBUILD_HOSTCXXFLAGS LDFLAGS_MODULE CHECK CHECKFLAGS
