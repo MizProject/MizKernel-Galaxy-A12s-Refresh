@@ -7,6 +7,7 @@
 [submodule "root/rKSU"]
 	path = root/rKSU
 	url = https://github.com/rsuntk/KernelSU
+	branch = susfs-rksu-master
 [submodule "root/nxtKSU"]
 	path = root/nxtKSU
 	url = https://github.com/KernelSU-Next/KernelSU-Next
