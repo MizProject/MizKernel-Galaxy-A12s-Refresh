@@ -18,6 +18,8 @@
 #include <linux/types.h>
 #include "mount.h"
 
+#include <linux/susfs.h>
+
 extern bool susfs_is_current_ksu_domain(void);
 
 #ifdef CONFIG_KSU_SUSFS_ENABLE_LOG
