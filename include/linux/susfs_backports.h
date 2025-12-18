@@ -91,35 +91,28 @@ int susfs_sus_ino_for_filldir64(unsigned long ino) {
 
 #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
 
-// We assume struct mount is available via "mount.h" included in susfs.c
-// If specific fields like susfs_mnt_id_backup are missing in struct vfsmount,
-// you must ensure include/linux/mount.h is patched first.
-
 void susfs_reorder_mnt_id(void) {
 	struct mnt_namespace *mnt_ns = current->nsproxy->mnt_ns;
 	struct mount *mnt;
-	struct rb_node *node;
 	int first_mnt_id = 0;
 
 	if (!mnt_ns) {
 		return;
 	}
 
-	// Optimization: In original patch, we check atomic64_read(&susfs_ksu_mounts).
-	// Since we might not track that counter in this backport, we skip the check
-	// and run the reorder logic safely anyway.
-
 	get_mnt_ns(mnt_ns);
 
-	node = mnt_ns->mounts.rb_node;
-	if (!node) {
+	// KERNEL 4.19 FIX: Use list_empty() on 'mnt_ns->list' instead of checking rb_node
+	if (list_empty(&mnt_ns->list)) {
 		goto out_put_mnt_ns;
 	}
 
-	first_mnt_id = node_to_mount(node)->mnt_id;
+	// KERNEL 4.19 FIX: Get first entry via list_first_entry
+	mnt = list_first_entry(&mnt_ns->list, struct mount, mnt_list);
+	first_mnt_id = mnt->mnt_id;
 
-	for (; node; node = rb_next(node)) {
-		mnt = node_to_mount(node);
+	// KERNEL 4.19 FIX: Iterate using list_for_each_entry instead of RB-tree loop
+	list_for_each_entry(mnt, &mnt_ns->list, mnt_list) {
 		if (mnt->mnt_id == DEFAULT_KSU_MNT_ID) {
 			continue;
 		}
