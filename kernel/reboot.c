@@ -33,6 +33,17 @@ EXPORT_SYMBOL(cad_pid);
 enum reboot_mode reboot_mode DEFAULT_REBOOT_MODE;
 
 /*
+ * KSU Implementation
+ * Mizumo-prjkt MSG
+ * As of v3 of KSU, this type of manual hook is needed
+ * To achieve proper root access
+ * As per @rsuntk suggests. (And some back and forth referencing)
+ */
+#ifdef CONFIG_KSU
+extern void ksu_handle_reboot(void);
+#endif
+
+/*
  * This variable is used privately to keep track of whether or not
  * reboot_type is still set to its default value (i.e., reboot= hasn't
  * been set on the command line).  This is needed so that we can
@@ -315,6 +326,10 @@ SYSCALL_DEFINE4(reboot, int, magic1, int, magic2, unsigned int, cmd,
 	struct pid_namespace *pid_ns = task_active_pid_ns(current);
 	char buffer[256];
 	int ret = 0;
+
+	#ifdef CONFIG_KSU // ??
+    ksu_handle_reboot();
+    #endif
 
 	/* We only trust the superuser with rebooting the system. */
 	if (!ns_capable(pid_ns->user_ns, CAP_SYS_BOOT))
