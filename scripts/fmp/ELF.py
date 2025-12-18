@@ -66,8 +66,8 @@ class ELF:
     """
     Utils for manipulating over ELF
     """
-    #     def __init__(self, elf_file, readelf_path=os.environ.get('CROSS_COMPILE')+"readelf"):
-    def __init__(self, elf_file, readelf_path=os.environ.get('CROSS_COMPILE_ANDROID_PROTON')+"readelf"):
+    #     def __init__(self, elf_file, readelf_path=os.environ.get('CROSS_COMPILE_ANDROID_PROTON')+"readelf"):
+    def __init__(self, elf_file, readelf_path=os.environ.get('CROSS_COMPILE')+"readelf"):
         self.__elf_file = elf_file
         self.utils = Utils()
         self.__readelf_path = readelf_path
