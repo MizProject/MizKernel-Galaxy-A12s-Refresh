@@ -320,7 +320,13 @@ include scripts/subarch.include
 # Default value for CROSS_COMPILE is not to prefix executables
 # Note: Some architectures assign CROSS_COMPILE in their arch/*/Makefile
 ARCH		?=arm64
-CROSS_COMPILE   ?= $(srctree)/toolchain/CC-4.9/bin/aarch64-linux-android-
+# Disown/Don't utilize standard 4.9
+# CROSS_COMPILE   ?= $(srctree)/toolchain/CC-4.9/bin/aarch64-linux-android-
+CROSS_COMPILE   ?= $(srctree)/toolchain/proton-clang/aarch64-linux-gnu/bin/
+CROSS_COMPILE_ANDROID_PROTON	?=	$(srctree)/toolchain/proton-clang/bin/aarch64-linux-gnu-
+CROSS_COMPILE_ANDROID_AARCH64_LINUX_GNU	?=	$(srctree)/toolchain/proton-clang/aarch64-linux-gnu/bin
+
+LLVM_LINK_PROTON	?=	$(srctree)/toolchain/proton-clang/bin
 
 # Architecture as present in compile.h
 UTS_MACHINE 	:= $(ARCH)
@@ -369,15 +375,27 @@ KBUILD_HOSTLDFLAGS  := $(HOST_LFS_LDFLAGS) $(HOSTLDFLAGS)
 KBUILD_HOSTLDLIBS   := $(HOST_LFS_LIBS) $(HOSTLDLIBS)
 
 # Make variables (CC, etc...)
+# AS & AD Calls are deprecated as its broken for some reason
+
 AS		= $(CROSS_COMPILE)as
 LD		= $(CROSS_COMPILE)ld
-CC      = $(srctree)/toolchain/clang-r383902/bin/clang
+# This is the default CC, but i should probably implement a flag later
+# on to accomodate both clangs (r38 and r41)
+# CC      = $(srctree)/toolchain/clang-r383902/bin/clang
+# Proton clang
+CC      = $(srctree)/toolchain/proton-clang/bin/clang
+# 
 CPP		= $(CC) -E
-AR		= $(CROSS_COMPILE)ar
-NM		= $(CROSS_COMPILE)nm
-STRIP		= $(CROSS_COMPILE)strip
-OBJCOPY		= $(CROSS_COMPILE)objcopy
-OBJDUMP		= $(CROSS_COMPILE)objdump
+# AR		= $(CROSS_COMPILE_ANDROID_PROTON)ar
+# NM		= $(CROSS_COMPILE_ANDROID_PROTON)nm
+# STRIP		= $(CROSS_COMPILE_ANDROID_PROTON)strip
+# OBJCOPY		= $(CROSS_COMPILE_ANDROID_PROTON)objcopy
+# OBJDUMP		= $(CROSS_COMPILE_ANDROID_PROTON)objdump
+AR	=	$(LLVM_LINK_PROTON)/llvm-ar
+NM	=	$(LLVM_LINK_PROTON)/llvm-nm
+STRIP	=	$(LLVM_LINK_PROTON)/llvm-strip
+OBJCOPY	=	$(LLVM_LINK_PROTON)/llvm-objcopy
+OBJDUMP	=	$(LLVM_LINK_PROTON)/llvm-objdump
 LEX		= flex
 YACC		= bison
 AWK		= awk
@@ -391,8 +409,7 @@ PYTHON3		= python3
 CHECK		= sparse
 
 ifeq ($(CONFIG_EXYNOS_FMP_FIPS),)
-READELF        = $(CROSS_COMPILE)readelf
-export READELF
+READELF        = $(CROSS_COMPILE_ANDROID_AARCH64_LINUX_GNU)/readelf
 endif
 
 CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
@@ -440,7 +457,7 @@ KBUILD_LDFLAGS :=
 GCC_PLUGINS_CFLAGS :=
 CLANG_FLAGS :=
 
-export ARCH SRCARCH CONFIG_SHELL HOSTCC KBUILD_HOSTCFLAGS CROSS_COMPILE AS LD CC
+export ARCH SRCARCH CONFIG_SHELL HOSTCC KBUILD_HOSTCFLAGS CROSS_COMPILE CROSS_COMPILE_ANDROID_PROTON CROSS_COMPILE_ANDROID_AARCH64_LINUX_GNU AS LD CC READELF
 export CPP AR NM STRIP OBJCOPY OBJDUMP KBUILD_HOSTLDFLAGS KBUILD_HOSTLDLIBS
 export MAKE LEX YACC AWK GENKSYMS INSTALLKERNEL PERL PYTHON PYTHON2 PYTHON3 UTS_MACHINE
 export HOSTCXX KBUILD_HOSTCXXFLAGS LDFLAGS_MODULE CHECK CHECKFLAGS
@@ -491,7 +508,8 @@ endif
 
 ifeq ($(cc-name),clang)
 ifneq ($(CROSS_COMPILE),)
-CLANG_TRIPLE    ?= $(srctree)/toolchain/clang/host/linux-x86/clang-r353983c/bin/aarch64-linux-gnu-
+# CLANG_TRIPLE    ?= $(srctree)/toolchain/clang/host/linux-x86/clang-r353983c/bin/aarch64-linux-gnu-
+CLANG_TRIPLE	?=	$(srctree)/toolchain/toolchain/proton-clang/bin/aarch64-linux-gnu-
 CLANG_FLAGS	+= --target=$(notdir $(CLANG_TRIPLE:%-=%))
 ifeq ($(shell $(srctree)/scripts/clang-android.sh $(CC) $(CLANG_FLAGS)), y)
 $(error "Clang with Android --target detected. Did you specify CLANG_TRIPLE?")
