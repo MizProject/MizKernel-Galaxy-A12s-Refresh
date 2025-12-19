@@ -31,10 +31,6 @@ struct seg6_bpf_srh_state {
 
 DECLARE_PER_CPU(struct seg6_bpf_srh_state, seg6_bpf_srh_states);
 
-struct seg6_bpf_srh_state {
-	bool valid;
-	u16 hdrlen;
-};
 
 DECLARE_PER_CPU(struct seg6_bpf_srh_state, seg6_bpf_srh_states);
 
