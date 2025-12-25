@@ -1270,7 +1270,7 @@ static int adf7242_probe(struct spi_device *spi)
 					     WQ_MEM_RECLAIM);
 	if (unlikely(!lp->wqueue)) {
 		ret = -ENOMEM;
-		goto err_alloc_wq;
+		goto err_hw_init;
 	}
 
 	ret = adf7242_hw_init(lp);
@@ -1302,8 +1302,6 @@ static int adf7242_probe(struct spi_device *spi)
 	return ret;
 
 err_hw_init:
-	destroy_workqueue(lp->wqueue);
-err_alloc_wq:
 	mutex_destroy(&lp->bmux);
 	ieee802154_free_hw(lp->hw);
 

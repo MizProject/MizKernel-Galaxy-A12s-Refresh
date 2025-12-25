@@ -2323,12 +2323,12 @@ static int mp_irqdomain_create(int ioapic)
 	ip->irqdomain = irq_domain_create_linear(fn, hwirqs, cfg->ops,
 						 (void *)(long)ioapic);
 
-	if (!ip->irqdomain) {
-		/* Release fw handle if it was allocated above */
-		if (!cfg->dev)
-			irq_domain_free_fwnode(fn);
+	/* Release fw handle if it was allocated above */
+	if (!cfg->dev)
+		irq_domain_free_fwnode(fn);
+
+	if (!ip->irqdomain)
 		return -ENOMEM;
-	}
 
 	ip->irqdomain->parent = parent;
 
