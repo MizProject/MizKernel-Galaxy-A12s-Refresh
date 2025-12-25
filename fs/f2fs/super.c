@@ -1281,9 +1281,6 @@ static void f2fs_put_super(struct super_block *sb)
 	int i;
 	bool dropped;
 
-	/* unregister procfs/sysfs entries in advance to avoid race case */
-	f2fs_unregister_sysfs(sbi);
-
 	f2fs_quota_off_umount(sb);
 
 	/* prevent remaining shrinker jobs */
@@ -1353,6 +1350,8 @@ static void f2fs_put_super(struct super_block *sb)
 	f2fs_destroy_post_read_wq(sbi);
 
 	kvfree(sbi->ckpt);
+
+	f2fs_unregister_sysfs(sbi);
 
 	sb->s_fs_info = NULL;
 	if (sbi->s_chksum_driver)
@@ -2887,9 +2886,8 @@ static int sanity_check_raw_super(struct f2fs_sb_info *sbi,
 	__u32 crc = 0;
 
 	if (le32_to_cpu(raw_super->magic) != F2FS_SUPER_MAGIC) {
-		f2fs_msg(sb, KERN_INFO,
-			"Magic Mismatch, valid(0x%x) - read(0x%x)",
-			F2FS_SUPER_MAGIC, le32_to_cpu(raw_super->magic));
+		f2fs_info(sbi, "Magic Mismatch, valid(0x%x) - read(0x%x)",
+			  F2FS_SUPER_MAGIC, le32_to_cpu(raw_super->magic));
 		return -EINVAL;
 	}
 
@@ -2898,15 +2896,13 @@ static int sanity_check_raw_super(struct f2fs_sb_info *sbi,
 		crc_offset = le32_to_cpu(raw_super->checksum_offset);
 		if (crc_offset !=
 			offsetof(struct f2fs_super_block, crc)) {
-			f2fs_msg(sb, KERN_INFO,
-				"Invalid SB checksum offset: %zu",
-				crc_offset);
+			f2fs_info(sbi, "Invalid SB checksum offset: %zu",
+				  crc_offset);
 			return -EFSCORRUPTED;
 		}
 		crc = le32_to_cpu(raw_super->crc);
 		if (!f2fs_crc_valid(sbi, crc, raw_super, crc_offset)) {
-			f2fs_msg(sb, KERN_INFO,
-				"Invalid SB checksum value: %u", crc);
+			f2fs_info(sbi, "Invalid SB checksum value: %u", crc);
 			return -EFSCORRUPTED;
 		}
 	}

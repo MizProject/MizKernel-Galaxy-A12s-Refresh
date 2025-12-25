@@ -664,8 +664,7 @@ void sta_set_rate_info_tx(struct sta_info *sta,
 		u16 brate;
 
 		sband = ieee80211_get_sband(sta->sdata);
-		WARN_ON_ONCE(sband && !sband->bitrates);
-		if (sband && sband->bitrates) {
+		if (sband) {
 			brate = sband->bitrates[rate->idx].bitrate;
 			rinfo->legacy = DIV_ROUND_UP(brate, 1 << shift);
 		}

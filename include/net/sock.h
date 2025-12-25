@@ -862,8 +862,6 @@ static inline int sk_memalloc_socks(void)
 {
 	return static_branch_unlikely(&memalloc_socks_key);
 }
-
-void __receive_sock(struct file *file);
 #else
 
 static inline int sk_memalloc_socks(void)
@@ -871,8 +869,6 @@ static inline int sk_memalloc_socks(void)
 	return 0;
 }
 
-static inline void __receive_sock(struct file *file)
-{ }
 #endif
 
 static inline gfp_t sk_gfp_mask(const struct sock *sk, gfp_t gfp_mask)
@@ -917,11 +913,11 @@ static inline void __sk_add_backlog(struct sock *sk, struct sk_buff *skb)
 	skb_dst_force(skb);
 
 	if (!sk->sk_backlog.tail)
-		WRITE_ONCE(sk->sk_backlog.head, skb);
+		sk->sk_backlog.head = skb;
 	else
 		sk->sk_backlog.tail->next = skb;
 
-	WRITE_ONCE(sk->sk_backlog.tail, skb);
+	sk->sk_backlog.tail = skb;
 	skb->next = NULL;
 }
 

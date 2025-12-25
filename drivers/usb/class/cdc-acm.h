@@ -109,7 +109,7 @@ struct acm {
 #		define EVENT_TTY_WAKEUP	0
 #		define EVENT_RX_STALL	1
 	struct usb_cdc_line_coding line;		/* bits, stop, parity */
-	struct delayed_work dwork;		        /* work queue entry for various purposes */
+	struct work_struct work;			/* work queue entry for line discipline waking up */
 	unsigned int ctrlin;				/* input control lines (DCD, DSR, RI, break, overruns) */
 	unsigned int ctrlout;				/* output control lines (DTR, RTS) */
 	struct async_icount iocount;			/* counters for control line changes */

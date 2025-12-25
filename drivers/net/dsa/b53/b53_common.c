@@ -1316,17 +1316,8 @@ static int b53_arl_op(struct b53_device *dev, int op, int port,
 	if (op)
 		return ret;
 
-	switch (ret) {
-	case -ETIMEDOUT:
-		return ret;
-	case -ENOSPC:
-		dev_dbg(dev->dev, "{%pM,%.4d} no space left in ARL\n",
-			addr, vid);
-		return is_valid ? ret : 0;
-	case -ENOENT:
-		/* We could not find a matching MAC, so reset to a new entry */
-		dev_dbg(dev->dev, "{%pM,%.4d} not found, using idx: %d\n",
-			addr, vid, idx);
+	/* We could not find a matching MAC, so reset to a new entry */
+	if (ret) {
 		fwd_entry = 0;
 		idx = 1;
 	}

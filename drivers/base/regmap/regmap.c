@@ -2366,7 +2366,7 @@ int regmap_raw_write_async(struct regmap *map, unsigned int reg,
 EXPORT_SYMBOL_GPL(regmap_raw_write_async);
 
 static int _regmap_raw_read(struct regmap *map, unsigned int reg, void *val,
-			    unsigned int val_len, bool noinc)
+			    unsigned int val_len)
 {
 	struct regmap_range_node *range;
 	int ret;
@@ -2379,7 +2379,7 @@ static int _regmap_raw_read(struct regmap *map, unsigned int reg, void *val,
 	range = _regmap_range_lookup(map, reg);
 	if (range) {
 		ret = _regmap_select_page(map, &reg, range,
-					  noinc ? 1 : val_len / map->format.val_bytes);
+					  val_len / map->format.val_bytes);
 		if (ret != 0)
 			return ret;
 	}
@@ -2417,7 +2417,7 @@ static int _regmap_bus_read(void *context, unsigned int reg,
 	if (!map->format.parse_val)
 		return -EINVAL;
 
-	ret = _regmap_raw_read(map, reg, work_val, map->format.val_bytes, false);
+	ret = _regmap_raw_read(map, reg, work_val, map->format.val_bytes);
 	if (ret == 0)
 		*val = map->format.parse_val(work_val);
 
@@ -2535,7 +2535,7 @@ int regmap_raw_read(struct regmap *map, unsigned int reg, void *val,
 
 		/* Read bytes that fit into whole chunks */
 		for (i = 0; i < chunk_count; i++) {
-			ret = _regmap_raw_read(map, reg, val, chunk_bytes, false);
+			ret = _regmap_raw_read(map, reg, val, chunk_bytes);
 			if (ret != 0)
 				goto out;
 
@@ -2546,7 +2546,7 @@ int regmap_raw_read(struct regmap *map, unsigned int reg, void *val,
 
 		/* Read remaining bytes */
 		if (val_len) {
-			ret = _regmap_raw_read(map, reg, val, val_len, false);
+			ret = _regmap_raw_read(map, reg, val, val_len);
 			if (ret != 0)
 				goto out;
 		}
@@ -2621,7 +2621,7 @@ int regmap_noinc_read(struct regmap *map, unsigned int reg,
 			read_len = map->max_raw_read;
 		else
 			read_len = val_len;
-		ret = _regmap_raw_read(map, reg, val, read_len, true);
+		ret = _regmap_raw_read(map, reg, val, read_len);
 		if (ret)
 			goto out_unlock;
 		val = ((u8 *)val) + read_len;

@@ -103,18 +103,7 @@ static acpi_status acpi_ged_request_interrupt(struct acpi_resource *ares,
 
 	irq = r.start;
 
-	switch (gsi) {
-	case 0 ... 255:
-		sprintf(ev_name, "_%c%02X",
-			trigger == ACPI_EDGE_SENSITIVE ? 'E' : 'L', gsi);
-
-		if (ACPI_SUCCESS(acpi_get_handle(handle, ev_name, &evt_handle)))
-			break;
-		/* fall through */
-	default:
-		if (ACPI_SUCCESS(acpi_get_handle(handle, "_EVT", &evt_handle)))
-			break;
-
+	if (ACPI_FAILURE(acpi_get_handle(handle, "_EVT", &evt_handle))) {
 		dev_err(dev, "cannot locate _EVT method\n");
 		return AE_ERROR;
 	}

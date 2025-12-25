@@ -4774,7 +4774,7 @@ static struct page *mc_handle_swap_pte(struct vm_area_struct *vma,
 	struct page *page = NULL;
 	swp_entry_t ent = pte_to_swp_entry(ptent);
 
-	if (!(mc.flags & MOVE_ANON))
+	if (!(mc.flags & MOVE_ANON) || non_swap_entry(ent))
 		return NULL;
 
 	/*
@@ -4792,9 +4792,6 @@ static struct page *mc_handle_swap_pte(struct vm_area_struct *vma,
 			return NULL;
 		return page;
 	}
-
-	if (non_swap_entry(ent))
-		return NULL;
 
 	/*
 	 * Because lookup_swap_cache() updates some statistics counter,

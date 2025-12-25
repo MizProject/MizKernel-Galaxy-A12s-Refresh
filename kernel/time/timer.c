@@ -46,7 +46,6 @@
 #include <linux/slab.h>
 #include <linux/compat.h>
 #include <linux/debug-snapshot.h>
-#include <linux/random.h>
 
 #include <linux/uaccess.h>
 #include <asm/unistd.h>

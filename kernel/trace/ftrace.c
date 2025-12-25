@@ -1651,8 +1651,6 @@ static bool test_rec_ops_needs_regs(struct dyn_ftrace *rec)
 static struct ftrace_ops *
 ftrace_find_tramp_ops_any(struct dyn_ftrace *rec);
 static struct ftrace_ops *
-ftrace_find_tramp_ops_any_other(struct dyn_ftrace *rec, struct ftrace_ops *op_exclude);
-static struct ftrace_ops *
 ftrace_find_tramp_ops_next(struct dyn_ftrace *rec, struct ftrace_ops *ops);
 
 static bool __ftrace_hash_rec_update(struct ftrace_ops *ops,
@@ -1790,7 +1788,7 @@ static bool __ftrace_hash_rec_update(struct ftrace_ops *ops,
 			 * to it.
 			 */
 			if (ftrace_rec_count(rec) == 1 &&
-			    ftrace_find_tramp_ops_any_other(rec, ops))
+			    ftrace_find_tramp_ops_any(rec))
 				rec->flags |= FTRACE_FL_TRAMP;
 			else
 				rec->flags &= ~FTRACE_FL_TRAMP;
@@ -2209,24 +2207,6 @@ ftrace_find_tramp_ops_any(struct dyn_ftrace *rec)
 	do_for_each_ftrace_op(op, ftrace_ops_list) {
 
 		if (!op->trampoline)
-			continue;
-
-		if (hash_contains_ip(ip, op->func_hash))
-			return op;
-	} while_for_each_ftrace_op(op);
-
-	return NULL;
-}
-
-static struct ftrace_ops *
-ftrace_find_tramp_ops_any_other(struct dyn_ftrace *rec, struct ftrace_ops *op_exclude)
-{
-	struct ftrace_ops *op;
-	unsigned long ip = rec->ip;
-
-	do_for_each_ftrace_op(op, ftrace_ops_list) {
-
-		if (op == op_exclude || !op->trampoline)
 			continue;
 
 		if (hash_contains_ip(ip, op->func_hash))
@@ -5686,11 +5666,8 @@ static int referenced_filters(struct dyn_ftrace *rec)
 	int cnt = 0;
 
 	for (ops = ftrace_ops_list; ops != &ftrace_list_end; ops = ops->next) {
-		if (ops_references_rec(ops, rec)) {
-			cnt++;
-			if (ops->flags & FTRACE_OPS_FL_SAVE_REGS)
-				rec->flags |= FTRACE_FL_REGS;
-		}
+		if (ops_references_rec(ops, rec))
+		    cnt++;
 	}
 
 	return cnt;
@@ -5867,8 +5844,8 @@ void ftrace_module_enable(struct module *mod)
 		if (ftrace_start_up)
 			cnt += referenced_filters(rec);
 
-		rec->flags &= ~FTRACE_FL_DISABLED;
-		rec->flags += cnt;
+		/* This clears FTRACE_FL_DISABLED */
+		rec->flags = cnt;
 
 		if (ftrace_start_up && cnt) {
 			int failed = __ftrace_replace_code(rec, 1);
@@ -6392,14 +6369,16 @@ static void ftrace_ops_assist_func(unsigned long ip, unsigned long parent_ip,
 {
 	int bit;
 
+	if ((op->flags & FTRACE_OPS_FL_RCU) && !rcu_is_watching())
+		return;
+
 	bit = trace_test_and_set_recursion(TRACE_LIST_START, TRACE_LIST_MAX);
 	if (bit < 0)
 		return;
 
 	preempt_disable_notrace();
 
-	if (!(op->flags & FTRACE_OPS_FL_RCU) || rcu_is_watching())
-		op->func(ip, parent_ip, op, regs);
+	op->func(ip, parent_ip, op, regs);
 
 	preempt_enable_notrace();
 	trace_clear_recursion(bit);
@@ -6470,12 +6449,12 @@ void ftrace_pid_follow_fork(struct trace_array *tr, bool enable)
 	if (enable) {
 		register_trace_sched_process_fork(ftrace_pid_follow_sched_process_fork,
 						  tr);
-		register_trace_sched_process_free(ftrace_pid_follow_sched_process_exit,
+		register_trace_sched_process_exit(ftrace_pid_follow_sched_process_exit,
 						  tr);
 	} else {
 		unregister_trace_sched_process_fork(ftrace_pid_follow_sched_process_fork,
 						    tr);
-		unregister_trace_sched_process_free(ftrace_pid_follow_sched_process_exit,
+		unregister_trace_sched_process_exit(ftrace_pid_follow_sched_process_exit,
 						    tr);
 	}
 }

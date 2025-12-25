@@ -1704,8 +1704,7 @@ static inline int macb_clear_csum(struct sk_buff *skb)
 
 static int macb_pad_and_fcs(struct sk_buff **skb, struct net_device *ndev)
 {
-	bool cloned = skb_cloned(*skb) || skb_header_cloned(*skb) ||
-		      skb_is_nonlinear(*skb);
+	bool cloned = skb_cloned(*skb) || skb_header_cloned(*skb);
 	int padlen = ETH_ZLEN - (*skb)->len;
 	int headroom = skb_headroom(*skb);
 	int tailroom = skb_tailroom(*skb);

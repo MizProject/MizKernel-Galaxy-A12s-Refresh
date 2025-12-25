@@ -15,13 +15,9 @@
 #include <linux/platform_device.h>
 #include <linux/suspend.h>
 
-/* Returned when NOT in tablet mode on some HP Stream x360 11 models */
-#define VGBS_TABLET_MODE_FLAG_ALT	0x10
 /* When NOT in tablet mode, VGBS returns with the flag 0x40 */
-#define VGBS_TABLET_MODE_FLAG		0x40
-#define VGBS_DOCK_MODE_FLAG		0x80
-
-#define VGBS_TABLET_MODE_FLAGS (VGBS_TABLET_MODE_FLAG | VGBS_TABLET_MODE_FLAG_ALT)
+#define TABLET_MODE_FLAG 0x40
+#define DOCK_MODE_FLAG   0x80
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("AceLan Kao");
@@ -138,76 +134,12 @@ static void detect_tablet_mode(struct platform_device *device)
 	if (!(obj && obj->type == ACPI_TYPE_INTEGER))
 		goto out;
 
-	m = !(vgbs & VGBS_TABLET_MODE_FLAGS);
+	m = !(obj->integer.value & TABLET_MODE_FLAG);
 	input_report_switch(priv->input_dev, SW_TABLET_MODE, m);
-	m = (vgbs & VGBS_DOCK_MODE_FLAG) ? 1 : 0;
+	m = (obj->integer.value & DOCK_MODE_FLAG) ? 1 : 0;
 	input_report_switch(priv->input_dev, SW_DOCK, m);
-}
-
-/*
- * There are several laptops (non 2-in-1) models out there which support VGBS,
- * but simply always return 0, which we translate to SW_TABLET_MODE=1. This in
- * turn causes userspace (libinput) to suppress events from the builtin
- * keyboard and touchpad, making the laptop essentially unusable.
- *
- * Since the problem of wrongly reporting SW_TABLET_MODE=1 in combination
- * with libinput, leads to a non-usable system. Where as OTOH many people will
- * not even notice when SW_TABLET_MODE is not being reported, a DMI based allow
- * list is used here. This list mainly matches on the chassis-type of 2-in-1s.
- *
- * There are also some 2-in-1s which use the intel-vbtn ACPI interface to report
- * SW_TABLET_MODE with a chassis-type of 8 ("Portable") or 10 ("Notebook"),
- * these are matched on a per model basis, since many normal laptops with a
- * possible broken VGBS ACPI-method also use these chassis-types.
- */
-static const struct dmi_system_id dmi_switches_allow_list[] = {
-	{
-		.matches = {
-			DMI_EXACT_MATCH(DMI_CHASSIS_TYPE, "31" /* Convertible */),
-		},
-	},
-	{
-		.matches = {
-			DMI_EXACT_MATCH(DMI_CHASSIS_TYPE, "32" /* Detachable */),
-		},
-	},
-	{
-		.matches = {
-			DMI_MATCH(DMI_SYS_VENDOR, "Dell Inc."),
-			DMI_MATCH(DMI_PRODUCT_NAME, "Venue 11 Pro 7130"),
-		},
-	},
-	{
-		.matches = {
-			DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
-			DMI_MATCH(DMI_PRODUCT_NAME, "HP Stream x360 Convertible PC 11"),
-		},
-	},
-	{
-		.matches = {
-			DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
-			DMI_MATCH(DMI_PRODUCT_NAME, "HP Pavilion 13 x360 PC"),
-		},
-	},
-	{
-		.matches = {
-			DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
-			DMI_MATCH(DMI_PRODUCT_NAME, "Switch SA5-271"),
-		},
-	},
-	{} /* Array terminator */
-};
-
-static bool intel_vbtn_has_switches(acpi_handle handle)
-{
-	unsigned long long vgbs;
-	acpi_status status;
-
-	if (!dmi_check_system(dmi_switches_allow_list))
-		return false;
-
-	status = acpi_evaluate_integer(handle, "VGBS", NULL, &vgbs);
-	return ACPI_SUCCESS(status);
+out:
+	kfree(vgbs_output.pointer);
 }
 
 static int intel_vbtn_probe(struct platform_device *device)
@@ -305,7 +237,7 @@ check_acpi_dev(acpi_handle handle, u32 lvl, void *context, void **rv)
 		return AE_OK;
 
 	if (acpi_match_device_ids(dev, ids) == 0)
-		if (!IS_ERR_OR_NULL(acpi_create_platform_device(dev, NULL)))
+		if (acpi_create_platform_device(dev, NULL))
 			dev_info(&dev->dev,
 				 "intel-vbtn: created platform device\n");
 
