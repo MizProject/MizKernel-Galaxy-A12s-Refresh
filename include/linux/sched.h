@@ -30,6 +30,9 @@
 #include <linux/rseq.h>
 #include <linux/sec_debug_types.h>
 
+// Add ANDROID_KABI_
+#include <linux/android_kabi.h>
+
 /* task_struct member predeclarations (sorted alphabetically): */
 struct audit_context;
 struct backing_dev_info;

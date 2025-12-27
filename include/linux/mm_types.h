@@ -17,6 +17,8 @@
 
 #include <asm/mmu.h>
 
+#include <linux/android_kabi.h>
+
 #ifndef AT_VECTOR_SIZE_ARCH
 #define AT_VECTOR_SIZE_ARCH 0
 #endif

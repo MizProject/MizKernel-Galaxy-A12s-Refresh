@@ -41,6 +41,8 @@
 #include <asm/byteorder.h>
 #include <uapi/linux/fs.h>
 
+#include <linux/android_kabi.h>
+
 #ifdef CONFIG_MMC_SRPMB
 #include <linux/mmc/ioctl.h>
 #endif
