@@ -1401,9 +1401,6 @@ struct task_struct {
 	struct mutex			futex_exit_mutex;
 #endif
 
-	ANDROID_KABI_RESERVE(7);
-	ANDROID_KABI_RESERVE(8);
-
 	ANDROID_KABI_RESERVE(1);
 	ANDROID_KABI_RESERVE(2);
 	ANDROID_KABI_RESERVE(3);
