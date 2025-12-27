@@ -1698,25 +1698,46 @@ static int s3c24xx_serial_init_port(struct s3c24xx_uart_port *ourport,
 		ourport->tx_irq = ret + 1;
 	}
 
-	if (!s3c24xx_serial_has_interrupt_mask(port)) {
-		ret = platform_get_irq(platdev, 1);
-		if (ret > 0)
-			ourport->tx_irq = ret;
-	}
-	/*
-	 * DMA is currently supported only on DT platforms, if DMA properties
-	 * are specified.
+	/* This logic code has issues
+	 * 
+	 * 
+	 * drivers/tty/serial/samsung.c:1712:12: error: no member named 'dma' in 'struct s3c24xx_uart_port'
+     *          ourport->dma = devm_kzalloc(port->dev,
+     *          ~~~~~~~  ^
+	 * drivers/tty/serial/samsung.c:1713:27: error: no member named 'dma' in 'struct s3c24xx_uart_port'
+                                            sizeof(*ourport->dma),
+                                                    ~~~~~~~  ^
+	 * drivers/tty/serial/samsung.c:1715:17: error: no member named 'dma' in 'struct s3c24xx_uart_port'
+                if (!ourport->dma) {
+                     ~~~~~~~  ^
+	 * drivers/tty/serial/samsung.c:1717:9: error: use of undeclared label 'err'
+                        goto err;
+                             ^
+
+	 * 
+	 * Maybe in the future if i figure out the missing 'dma' and the undeclared labels
+	 * 	  
 	 */
-	if (platdev->dev.of_node && of_find_property(platdev->dev.of_node,
-						     "dmas", NULL)) {
-		ourport->dma = devm_kzalloc(port->dev,
-					    sizeof(*ourport->dma),
-					    GFP_KERNEL);
-		if (!ourport->dma) {
-			ret = -ENOMEM;
-			goto err;
-		}
-	}
+
+	// if (!s3c24xx_serial_has_interrupt_mask(port)) {
+	// 	ret = platform_get_irq(platdev, 1);
+	// 	if (ret > 0)
+	// 		ourport->tx_irq = ret;
+	// }
+	// /*
+	//  * DMA is currently supported only on DT platforms, if DMA properties
+	//  * are specified.
+	//  */
+	// if (platdev->dev.of_node && of_find_property(platdev->dev.of_node,
+	// 					     "dmas", NULL)) {
+	// 	ourport->dma = devm_kzalloc(port->dev,
+	// 				    sizeof(*ourport->dma),
+	// 				    GFP_KERNEL);
+	// 	if (!ourport->dma) {
+	// 		ret = -ENOMEM;
+	// 		goto err;
+	// 	}
+	// }
 
 	ourport->clk	= clk_get(&platdev->dev, "uart");
 	ret = platform_get_irq(platdev, 1);
