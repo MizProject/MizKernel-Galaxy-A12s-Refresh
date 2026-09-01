@@ -4,11 +4,11 @@
 #
 
 #
-# Compiler: Android (6443078 based on r383902) clang version 11.0.1 (https://android.googlesource.com/toolchain/llvm-project b397f81060ce6d701042b782172ed13bee898b79)
+# Compiler: Android (7284624, based on r416183b) clang version 12.0.5 (https://android.googlesource.com/toolchain/llvm-project c935d99d7cf2016289302412d708641d52d2f7ee)
 #
 CONFIG_GCC_VERSION=0
 CONFIG_CC_IS_CLANG=y
-CONFIG_CLANG_VERSION=110001
+CONFIG_CLANG_VERSION=120005
 CONFIG_CC_HAS_ASM_GOTO=y
 CONFIG_IRQ_WORK=y
 CONFIG_BUILDTIME_EXTABLE_SORT=y
@@ -19,7 +19,7 @@ CONFIG_THREAD_INFO_IN_TASK=y
 #
 CONFIG_INIT_ENV_ARG_LIMIT=32
 # CONFIG_COMPILE_TEST is not set
-CONFIG_LOCALVERSION="-MZK-Agnes-Tachyon-debug-v1.1"
+CONFIG_LOCALVERSION="-MZK-Agnes-Tachyon-debug-v1.2"
 CONFIG_LOCALVERSION_AUTO=y
 CONFIG_BUILD_SALT=""
 CONFIG_DEFAULT_HOSTNAME="(none)"
@@ -1287,18 +1287,18 @@ CONFIG_HAVE_EBPF_JIT=y
 # KernelSU
 #
 CONFIG_KSU=y
-CONFIG_KSU_DEBUG=y
+# CONFIG_KSU_DEBUG is not set
 CONFIG_KSU_TOOLKIT_SUPPORT=y
 CONFIG_KSU_FULL_NAME_FORMAT="%TAG_NAME%-%COMMIT_SHA%@%REPO_NAME%"
 # CONFIG_KSU_DISABLE_MANAGER is not set
 # CONFIG_KSU_DISABLE_POLICY is not set
 CONFIG_KSU_MULTI_MANAGER_SUPPORT=y
 # CONFIG_KSU_TRACEPOINT_HOOK is not set
-# CONFIG_KSU_MANUAL_HOOK is not set
-CONFIG_KSU_SUSFS=y
+CONFIG_KSU_MANUAL_HOOK=y
+# CONFIG_KSU_SUSFS is not set
 
 #
-# KernelSU - SUSFS
+# KernelSU - Manual Hook Auto hook
 #
 
 #
@@ -1310,29 +1310,23 @@ CONFIG_KSU_SUSFS=y
 #
 
 #
-# If anything mismatch with simonpunk's patch, Kernel compile maybe FAILED!
+# If anything mismatch with document, Kernel compile maybe FAILED!
 #
 
 #
-# See simonpunk's original patch if you face any compile failed due to hook check
+# See document if you face any compile failed due to hook check
 #
 
 #
-# Repo: https://gitlab.com/simonpunk/susfs4ksu
+# Document: https://resukisu.github.io/guide/manual-integrate.html
 #
 
 #
 # --------------------------------------------------------------
 #
-CONFIG_KSU_SUSFS_SUS_PATH=y
-CONFIG_KSU_SUSFS_SUS_MOUNT=y
-CONFIG_KSU_SUSFS_SUS_KSTAT=y
-CONFIG_KSU_SUSFS_SPOOF_UNAME=y
-CONFIG_KSU_SUSFS_ENABLE_LOG=y
-CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y
-CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y
-CONFIG_KSU_SUSFS_OPEN_REDIRECT=y
-CONFIG_KSU_SUSFS_SUS_MAP=y
+CONFIG_KSU_MANUAL_HOOK_AUTO_SETUID_HOOK=y
+CONFIG_KSU_MANUAL_HOOK_AUTO_INITRC_HOOK=y
+CONFIG_KSU_MANUAL_HOOK_AUTO_INPUT_HOOK=y
 CONFIG_ARM_AMBA=y
 
 #
@@ -5289,7 +5283,7 @@ CONFIG_FUELGAUGE_SM5714=y
 #
 CONFIG_PDIC_SM5714=y
 CONFIG_SM5714_FACTORY_MODE=y
-# CONFIG_PDIC_PD30 is not set
+CONFIG_PDIC_PD30=y
 # CONFIG_SM5714_WATER_DETECTION_ENABLE is not set
 # CONFIG_SM5714_SUPPORT_SBU is not set
 # CONFIG_SUPPORT_USB_TYPEC_OPS is not set
@@ -5306,7 +5300,7 @@ CONFIG_BATTERY_SAMSUNG_LEGO_STYLE=y
 CONFIG_STEP_CHARGING=y
 # CONFIG_ENABLE_FULL_BY_SOC is not set
 # CONFIG_UPDATE_BATTERY_DATA is not set
-# CONFIG_AFC_CURR_CONTROL_BY_TEMP is not set
+CONFIG_AFC_CURR_CONTROL_BY_TEMP=y
 CONFIG_BATTERY_CISD=y
 # CONFIG_PREVENT_SOC_JUMP is not set
 # CONFIG_CS100_JPNCONCEPT is not set
@@ -5577,6 +5571,7 @@ CONFIG_NLS_ISO8859_1=y
 CONFIG_NLS_UTF8=y
 # CONFIG_DLM is not set
 # CONFIG_UNICODE is not set
+CONFIG_NOMOUNT=y
 
 #
 # Security options
