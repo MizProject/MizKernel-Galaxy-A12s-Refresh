@@ -3437,8 +3437,6 @@ static void selinux_inode_post_setxattr(struct dentry *dentry, const char *name,
 		return;
 	}
 
-	rc = selinux_setprocattr(name, value, size);
-}
 
 	rc = security_context_to_sid_force(&selinux_state, value, size,
 					   &newsid);
