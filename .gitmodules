@@ -21,3 +21,6 @@
 [submodule "root/resukiKSU"]
 	path = root/resukiKSU
 	url = https://github.com/ReSukiSU/ReSukiSU
+[submodule "NoMount"]
+	path = NoMount
+	url = https://github.com/maxsteeel/nomount
