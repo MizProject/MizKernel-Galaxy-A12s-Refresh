@@ -832,7 +832,7 @@ ssize_t (*const write_op[])(struct file *, char *, size_t) = {
 	[SEL_USER] = sel_write_user,
 	[SEL_MEMBER] = sel_write_member,
 	[SEL_CONTEXT] = sel_write_context,
-}
+};
 #endif
 //
 
