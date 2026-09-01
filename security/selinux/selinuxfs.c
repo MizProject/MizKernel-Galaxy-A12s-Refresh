@@ -41,7 +41,6 @@
 #include "security.h"
 #include "objsec.h"
 #include "conditional.h"
-#include "ima.h"
 
 #ifdef CONFIG_KSU_SUSFS
 extern struct page *fake_status;
